@@ -16,7 +16,6 @@ Configuration can be done by editing the appsettings.json file, currently only a
     }
  }
 ```
-The Plex section contains the following:
 
 | key | value |
 | --- | --- |
