@@ -26,4 +26,5 @@ The Plex section contains the following:
 
 
 *) More details on the plex token at: https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
+
 **) https://slack.com/help/articles/115005265063-Incoming-webhooks-for-Slack
