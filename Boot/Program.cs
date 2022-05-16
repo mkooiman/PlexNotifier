@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 var configuration = new ConfigurationBuilder()
-    .SetBasePath(Directory.GetParent(AppContext.BaseDirectory).FullName)
+    .SetBasePath(Directory.GetParent(AppContext.BaseDirectory)!.FullName)
     .AddJsonFile("appsettings.json", false)
     .Build();
 

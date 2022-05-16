@@ -10,7 +10,7 @@ namespace Slack;
 internal sealed class SlackService: ISlackService
 {
 
-    private readonly string _channel = "#plex";
+    private readonly string _channel;
     private readonly string _webhookUrl;
     public SlackService(IConfiguration configuration)
     {
@@ -61,7 +61,7 @@ internal sealed class SlackService: ISlackService
         Console.WriteLine(result);
     }
 
-    private List<Block> CreateBlocks(string title, string description, string rating, string image, string alttext)
+    private List<Block> CreateBlocks(string title, string description, string rating, string? image, string? alttext)
     {
         return new List<Block>()
         {
