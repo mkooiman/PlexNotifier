@@ -14,7 +14,8 @@ Configuration can be done by editing the appsettings.json file, currently only a
         "Channel": "[slack channel]"
 
     }
- }```
+ }
+```
 The Plex section contains the following:
 | key | value |
 |===|===|
