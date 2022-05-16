@@ -21,7 +21,7 @@ Configuration can be done by editing the appsettings.json file, currently only a
 | --- | --- |
 | Plex.Url | The (public) url where your Plex server can be reached, this is required for the thumbnail to be retrieved|
 | Plex.Token* | The Plex API Token |
-| Slack.WebhookUrl | The webhook url retrieved from Slack | 
+| Slack.WebhookUrl** | The webhook url retrieved from Slack | 
 | Slack.Channel | The channel to post to in Slack | 
 
 
