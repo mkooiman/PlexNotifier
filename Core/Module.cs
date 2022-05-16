@@ -8,6 +8,6 @@ public static class Module
 {
     public static void RegisterServices(IConfiguration configuration, IServiceCollection services)
     {
-        services.AddScoped<IGetNewlyAddedMediaUseCase, GetNewlyAddedMediaUseCase>();
+        services.AddScoped<INotifyOfNewlyAddedMediaUseCase, NotifyOfNewlyAddedMediaUseCase>();
     }
 }

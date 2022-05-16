@@ -21,5 +21,5 @@ Slack.Module.RegisterServices(configuration, serviceCollection);
 
 
 var provider = serviceCollection.BuildServiceProvider();
-var useCase = provider.GetRequiredService<IGetNewlyAddedMediaUseCase>();
+var useCase = provider.GetRequiredService<INotifyOfNewlyAddedMediaUseCase>();
 await useCase.Handle();
