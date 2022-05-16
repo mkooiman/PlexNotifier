@@ -9,7 +9,6 @@ var configuration = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json", false)
     .Build();
 
-// Add access to generic IConfigurationRoot
 ServiceCollection serviceCollection = new ServiceCollection();
 serviceCollection.AddLogging();
 

@@ -65,7 +65,7 @@ internal sealed class PlexService: IPlexService
         items.Sort((i, j) => j.AddedAt.CompareTo(i.AddedAt));
         
         return items
-            .Take(50)
+            .Take(count)
             .ToList();
     }
 }
