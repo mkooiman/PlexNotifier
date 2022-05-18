@@ -4,12 +4,19 @@ using Core.UseCases;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-var configuration = new ConfigurationBuilder()
-    .SetBasePath(Directory.GetParent(AppContext.BaseDirectory)!.FullName)
-    .AddJsonFile("appsettings.json", false)
-    .AddJsonFile("appsettings.omv.json", true)
-    .Build();
+var baseDir = Directory.GetParent(AppContext.BaseDirectory)!.FullName;
 
+var files = Directory.GetFiles(baseDir, "appsettings*.json");
+
+var configurationBuilder = new ConfigurationBuilder()
+    .SetBasePath(baseDir);
+foreach (var file in files)
+{
+    configurationBuilder.AddJsonFile(file, true);
+}
+    
+var configuration = configurationBuilder.Build();
+    
 ServiceCollection serviceCollection = new ServiceCollection();
 serviceCollection.AddLogging();
 
