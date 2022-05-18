@@ -8,8 +8,11 @@ var baseDir = Directory.GetParent(AppContext.BaseDirectory)!.FullName;
 
 var files = Directory.GetFiles(baseDir, "appsettings*.json");
 
+Array.Sort(files);
+
 var configurationBuilder = new ConfigurationBuilder()
     .SetBasePath(baseDir);
+
 foreach (var file in files)
 {
     configurationBuilder.AddJsonFile(file, true);
