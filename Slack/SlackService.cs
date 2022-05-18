@@ -23,11 +23,7 @@ internal sealed class SlackService: ISlackService
         var slackClient = new SlackClient(_webhookUrl);
 
         var stars = (int) Math.Round(item.Rating / 2, MidpointRounding.ToEven);
-        var rating = ":star:";
-        while (--stars > 0)
-        {
-            rating+= ":star:";
-        }
+        string? rating = null;
         
         var slackMessage = new SlackMessage
         {
@@ -40,13 +36,18 @@ internal sealed class SlackService: ISlackService
         string description;
         if (item.ItemType == ItemType.Movie)
         {
-            title = $"*I've just added {item.Title} to my plex share {item.Server}*";
+            title = $"*I've just found a newly added Movie: {item.Title} on plex share _{item.Server}_*";
             string tagLine = item.TagLine == null ? "" :("_"+ item.TagLine+"_");
             description = $"*{item.Title}*\n{tagLine}\n{item.Description}";
+            rating = ":star:";
+            while (--stars > 0)
+            {
+                rating+= ":star:";
+            }
         }
         else
         {
-            title = $"*I've just added S{item.Season:D2}E{item.Episode:D2} of {item.Show} to my plex share {item.Server}*";
+            title = $"*I've just found a newly added episode S{item.Season:D2}E{item.Episode:D2} of {item.Show} on plex share _{item.Server}_*";
             string tagLine = item.TagLine == null ? $"S{item.Season:D2}E{item.Episode:D2}" :$"_{item.TagLine}_";
             description = $"*{item.Show}: {item.Title}*\n{tagLine}\n{item.Description}";
         }
@@ -61,9 +62,10 @@ internal sealed class SlackService: ISlackService
         Console.WriteLine(result);
     }
 
-    private List<Block> CreateBlocks(string title, string description, string rating, string? image, string? alttext)
+    private List<Block> CreateBlocks(string title, string description, string? rating, string? image, string? alttext)
     {
-        return new List<Block>()
+        
+        var blocks = new List<Block>()
         {
             new Section()
             {
@@ -75,7 +77,6 @@ internal sealed class SlackService: ISlackService
             },
             new Section()
             {
-                BlockId = "section567",
                 Text = new TextObject()
                 {
                     Type = TextObject.TextType.Markdown,
@@ -86,19 +87,24 @@ internal sealed class SlackService: ISlackService
                     ImageUrl = image,
                     AltText = alttext
                 }
-            },
-            new Section()
+            }
+            
+        };
+        if(rating != null)
+        {
+            blocks.Add(new Section()
             {
-                BlockId = "section789",
                 Fields = new List<TextObject>()
                 {
-                    new ()
+                    new()
                     {
                         Type = TextObject.TextType.Markdown,
                         Text = $"*Rating:*\n {rating}"
                     },
                 }
-            }
-        };
+            });
+        }
+
+        return blocks;
     }
 }

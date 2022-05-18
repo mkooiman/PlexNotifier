@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 var configuration = new ConfigurationBuilder()
     .SetBasePath(Directory.GetParent(AppContext.BaseDirectory)!.FullName)
     .AddJsonFile("appsettings.json", false)
+    .AddJsonFile("appsettings.omv.json", true)
     .Build();
 
 ServiceCollection serviceCollection = new ServiceCollection();

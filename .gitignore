@@ -9,7 +9,7 @@ Resource.designer.cs
 *.user
 *.userosscache
 *.sln.docstates
-
+*.omv.json
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 

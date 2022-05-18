@@ -14,23 +14,33 @@ internal sealed class PlexService: IPlexService
     private readonly PlexAccount _account;
     private readonly string _baseUrl;
     private readonly string _token;
+    private readonly bool _ownedOnly = false;
 
     public PlexService(PlexAccount account, IConfiguration configuration)
     {
         _account = account ?? throw new ArgumentNullException(nameof(account));
         _baseUrl = configuration["Plex:Url"];
         _token = configuration["Plex:Token"];
+        
+        if (bool.TryParse(configuration["Plex:OwnedOnly"], out bool ownedOnly))
+        {
+            _ownedOnly = ownedOnly;
+        }
+
     }
         
     public async Task<List<MediaItem>> GetRecentlyAdded( int count = 50)
     {
         var servers = this._account.Servers().Result;
         
-        var myServers = servers.Where(c => c.Owned == 1);
-
+        if(_ownedOnly)
+        {
+            servers = servers.Where(x => x.Owned == 1).ToList();
+        }
+        
         var items = new List<MediaItem>();
         
-        foreach (var server in myServers)
+        foreach (var server in servers)
         {
             var libraries = await server
                .Libraries()
@@ -38,7 +48,6 @@ internal sealed class PlexService: IPlexService
 
             foreach (var libraryBase in libraries)
             {
-                
                 
                 if(libraryBase is MovieLibrary ml)
                 {
