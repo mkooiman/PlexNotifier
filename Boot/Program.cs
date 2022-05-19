@@ -1,36 +1,28 @@
-﻿
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
+using PlexNotifier;
 
-using Core.UseCases;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-
-var baseDir = Directory.GetParent(AppContext.BaseDirectory)!.FullName;
-
-var files = Directory.GetFiles(baseDir, "appsettings*.json");
-
-Array.Sort(files);
-
-var configurationBuilder = new ConfigurationBuilder()
-    .SetBasePath(baseDir);
-
-foreach (var file in files)
+public static class Program
 {
-    configurationBuilder.AddJsonFile(file, true);
+    public static void Main(string[] args)
+    {
+        using (var host = CreateHostBuilder(args).Build())
+        {
+            host.Run();
+        }
+                    
+    }
+
+    public static IHostBuilder CreateHostBuilder(string[] args) =>
+        Host.CreateDefaultBuilder(args)
+            .ConfigureLogging( l=>
+            {
+                
+                l.ClearProviders();
+                l.AddConsole();
+            })
+            .ConfigureWebHostDefaults(webBuilder =>
+            {
+                webBuilder.UseStartup<Startup>();
+            });
 }
-    
-var configuration = configurationBuilder.Build();
-    
-ServiceCollection serviceCollection = new ServiceCollection();
-serviceCollection.AddLogging();
-
-serviceCollection.AddSingleton<IConfiguration>(configuration);
-
-Core.Module.RegisterServices(configuration, serviceCollection);
-Plex.Module.RegisterServices(configuration, serviceCollection);
-Repository.Module.RegisterServices(configuration, serviceCollection);
-Slack.Module.RegisterServices(configuration, serviceCollection);
-
-
-var provider = serviceCollection.BuildServiceProvider();
-var useCase = provider.GetRequiredService<INotifyOfNewlyAddedMediaUseCase>();
-await useCase.Handle();

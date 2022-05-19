@@ -1,6 +1,7 @@
 using Core.Domain;
 using Core.Repositories;
 using Core.Services;
+using Microsoft.Extensions.Logging;
 
 namespace Core.UseCases;
 
@@ -14,12 +15,18 @@ public interface INotifyOfNewlyAddedMediaUseCase
 
 internal sealed class NotifyOfNewlyAddedMediaUseCase : INotifyOfNewlyAddedMediaUseCase
 {
+    private readonly ILogger<NotifyOfNewlyAddedMediaUseCase> _logger;
     private readonly IPlexService _plexService;
     private readonly IScanRepository _scanRepository;
     private readonly ISlackService _slackService;
 
-    public NotifyOfNewlyAddedMediaUseCase(IPlexService plexService, ISlackService slackService,  IScanRepository scanRepository)
+    public NotifyOfNewlyAddedMediaUseCase(
+        ILogger<NotifyOfNewlyAddedMediaUseCase> logger,
+        IPlexService plexService, 
+        ISlackService slackService,  IScanRepository scanRepository)
     {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        
         _plexService = plexService ?? throw new ArgumentNullException(nameof(plexService));
         _scanRepository = scanRepository ?? throw new ArgumentNullException(nameof(scanRepository));
         _slackService = slackService ?? throw new ArgumentNullException(nameof(slackService));
@@ -34,7 +41,10 @@ internal sealed class NotifyOfNewlyAddedMediaUseCase : INotifyOfNewlyAddedMediaU
         var lastScan = await _scanRepository
             .GetLastScan()
             .ConfigureAwait(false);
-
+        
+        _logger.LogInformation($"Last scan was at: {lastScan?.Time}");
+        
+        
         var newItems = lastAdded
             .Where(i => i.AddedAt > lastScan.Time)
             .ToList();

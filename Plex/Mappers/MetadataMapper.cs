@@ -15,4 +15,6 @@ internal static class MetadataMapper
         return new MediaItem(guid, metadata.Title, metadata.Summary, metadata.Tagline, imageUrl, rating,
             metadata.AddedAt.UnixTimestampToDate(), type, metadata.GrandparentTitle, metadata.ParentIndex, metadata.Index, serverName);
     }
+    
+    
 }

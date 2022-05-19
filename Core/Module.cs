@@ -8,6 +8,7 @@ public static class Module
 {
     public static void RegisterServices(IConfiguration configuration, IServiceCollection services)
     {
+        services.AddScoped<ISearchContentUseCase, SearchContentUseCase>();
         services.AddScoped<INotifyOfNewlyAddedMediaUseCase, NotifyOfNewlyAddedMediaUseCase>();
     }
 }

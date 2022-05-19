@@ -1,11 +1,10 @@
-using AutoMapper;
 using Core.Domain;
 using Core.Services;
 using Microsoft.Extensions.Configuration;
 using Plex.Library.ApiModels.Accounts;
 using Plex.Library.ApiModels.Libraries;
+using Plex.Library.ApiModels.Servers;
 using Plex.Mappers;
-using Plex.ServerApi.PlexModels.Media;
 
 namespace Plex;
 
@@ -37,7 +36,6 @@ internal sealed class PlexService: IPlexService
         {
             servers = servers.Where(x => x.Owned == 1).ToList();
         }
-        
         var items = new List<MediaItem>();
         
         foreach (var server in servers)
@@ -76,5 +74,43 @@ internal sealed class PlexService: IPlexService
         return items
             .Take(count)
             .ToList();
+    }
+
+    public async Task<List<MediaItem>> SearchContent(string searchTerm)
+    {
+        var servers = await _account
+            .Servers()
+            .ConfigureAwait(false);
+        
+        
+        var tasks = servers
+            .Select( x=> Search(x, searchTerm))
+            .ToList();
+        
+        await Task
+            .WhenAll(tasks)
+            .ConfigureAwait(false);
+        
+        return tasks.SelectMany(task => task.Result).ToList();
+    }
+
+    private async Task<List<MediaItem>> Search(Server server, string searchTerm)
+    {
+        var result = await server
+            .HubLibrarySearch(searchTerm)
+            .ConfigureAwait(false);
+        var hubs = result.Hub.Where(h => h.Metadata != null).ToList();
+        if(hubs.Count == 0)
+        {
+            return new List<MediaItem>();
+        }
+        
+        return hubs
+            .SelectMany(h => h.Metadata
+                .Select(m => m.Map(m.GrandparentArt == null ? ItemType.Movie : ItemType.Episode,
+                server.FriendlyName, _baseUrl, _token)))
+            .ToList();
+
+
     }
 }

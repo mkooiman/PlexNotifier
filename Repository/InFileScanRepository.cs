@@ -12,9 +12,17 @@ internal sealed class InFileScanRepository: IScanRepository
     
     public InFileScanRepository(IConfiguration configuration)
     {
+        var dir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+        if (!string.IsNullOrWhiteSpace(configuration["ScanRepositoryLocation"]))
+        {
+            dir = configuration["ScanRepositoryLocation"];
+        }
+        // Fallback to current directory
+        dir ??= "";
         if (!string.IsNullOrWhiteSpace(configuration["ScanRepositoryFile"]))
         {
-            _file = configuration["ScanRepositoryFile"];
+            _file = Path.Combine(dir, configuration["ScanRepositoryFile"]);
         }
     }
     

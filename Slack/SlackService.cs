@@ -1,6 +1,7 @@
 using Core.Domain;
 using Core.Services;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Slack.Webhooks;
 using Slack.Webhooks.Blocks;
 using Slack.Webhooks.Elements;
@@ -12,15 +13,20 @@ internal sealed class SlackService: ISlackService
 
     private readonly string _channel;
     private readonly string _webhookUrl;
-    public SlackService(IConfiguration configuration)
+    private readonly ILogger<SlackService> _logger;
+
+    public SlackService(ILogger<SlackService> logger, IConfiguration configuration)
     {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        
         _webhookUrl = configuration["Slack:WebhookUrl"];
         _channel = configuration["Slack:Channel"];
     }
-    
-    public async Task SendMediaItem(MediaItem item)
+
+    public async Task SendMediaItem(MediaItem item, string? webhookUrl = null, string responseType = "in_channel")
     {
-        var slackClient = new SlackClient(_webhookUrl);
+        webhookUrl ??= _webhookUrl;
+        var slackClient = new SlackClient(webhookUrl);
 
         var stars = (int) Math.Round(item.Rating / 2, MidpointRounding.ToEven);
         string? rating = null;
@@ -29,7 +35,8 @@ internal sealed class SlackService: ISlackService
         {
             Channel = _channel,
             IconEmoji = item.ItemType == ItemType.Movie ? Emoji.MovieCamera: Emoji.Tv,
-            Username = "PlexNotifier"
+            Username = "PlexNotifier",
+            ResponseType = responseType
         };
 
         string title;
@@ -59,7 +66,23 @@ internal sealed class SlackService: ISlackService
             .PostAsync(slackMessage)
             .ConfigureAwait(false);
         
-        Console.WriteLine(result);
+    }
+
+    public async Task SendSimpleMessage(string message, string? webhookUrl = null, string responseType = "in_channel") 
+    {
+        webhookUrl ??= _webhookUrl;
+        var slackClient = new SlackClient(webhookUrl);
+        _logger.LogInformation("Sending message to slack on channel {channel}, to url {webhookUrl}", _channel, webhookUrl);
+        var slackMessage = new SlackMessage
+        {
+            Text = message,
+            ResponseType = responseType
+        };
+
+        await slackClient
+            .PostAsync(slackMessage)
+            .ConfigureAwait(false);
+        
     }
 
     private List<Block> CreateBlocks(string title, string description, string? rating, string? image, string? alttext)

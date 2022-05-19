@@ -12,6 +12,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Slack", "Slack\Slack.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Repository", "Repository\Repository.csproj", "{0333BB76-6E24-4DFB-88AB-A5F3B4979EC8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "Api\Api.csproj", "{E714E304-81E6-459C-BA11-B71D63A46DF9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jobs", "Jobs\Jobs.csproj", "{3A59A8F6-87DA-45EE-AFF4-2ED4945E332F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +46,13 @@ Global
 		{0333BB76-6E24-4DFB-88AB-A5F3B4979EC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0333BB76-6E24-4DFB-88AB-A5F3B4979EC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0333BB76-6E24-4DFB-88AB-A5F3B4979EC8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E714E304-81E6-459C-BA11-B71D63A46DF9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E714E304-81E6-459C-BA11-B71D63A46DF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E714E304-81E6-459C-BA11-B71D63A46DF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E714E304-81E6-459C-BA11-B71D63A46DF9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A59A8F6-87DA-45EE-AFF4-2ED4945E332F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A59A8F6-87DA-45EE-AFF4-2ED4945E332F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A59A8F6-87DA-45EE-AFF4-2ED4945E332F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A59A8F6-87DA-45EE-AFF4-2ED4945E332F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
