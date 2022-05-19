@@ -23,6 +23,39 @@ internal sealed class SlackService: ISlackService
         _channel = configuration["Slack:Channel"];
     }
 
+    public async Task SendSearchResult(MediaItem item, string? webhookUrl = null, string responseType = "in_channel")
+    {
+        webhookUrl ??= _webhookUrl;
+        var slackClient = new SlackClient(webhookUrl);
+
+        var slackMessage = new SlackMessage
+        {
+            Channel = _channel,
+            IconEmoji = item.ItemType == ItemType.Movie ? Emoji.MovieCamera: Emoji.Tv,
+            Username = "PlexNotifier",
+            ResponseType = responseType
+        };
+
+        string title;
+        if (item.ItemType == ItemType.Movie)
+        {
+            string tagLine = item.TagLine == null ? "" :("_"+ item.TagLine+"_");
+            title = $"*{item.Title}*,\n{tagLine}\nOn plex share *_{item.Server}_*";
+            
+        }
+        else
+        {
+            title = $"*{item.Show} {item.Season:D2}E{item.Episode:D2}*\nOn plex share *_{item.Server}_*";
+        }
+
+        slackMessage.Blocks = CreateSearchBlocks(title, item.ImageUrl, item.Title);
+        
+        var result = await slackClient
+            .PostAsync(slackMessage)
+            .ConfigureAwait(false);
+
+    }
+
     public async Task SendMediaItem(MediaItem item, string? webhookUrl = null, string responseType = "in_channel")
     {
         webhookUrl ??= _webhookUrl;
@@ -59,7 +92,7 @@ internal sealed class SlackService: ISlackService
             description = $"*{item.Show}: {item.Title}*\n{tagLine}\n{item.Description}";
         }
 
-        slackMessage.Blocks = CreateBlocks(title, description, rating, item.ImageUrl, item.Title);
+        slackMessage.Blocks = CreateNewlyAddedBlocks(title, description, rating, item.ImageUrl, item.Title);
         
       
         var result = await slackClient
@@ -85,7 +118,31 @@ internal sealed class SlackService: ISlackService
         
     }
 
-    private List<Block> CreateBlocks(string title, string description, string? rating, string? image, string? alttext)
+    private List<Block> CreateSearchBlocks(string title, string? image, string? alttext)
+    {
+        
+        var blocks = new List<Block>()
+        {
+            new Section()
+            {
+                Text = new TextObject()
+                {
+                    Type = TextObject.TextType.Markdown,
+                    Text = title
+                },
+
+                Accessory = new Webhooks.Elements.Image()
+                {
+                    ImageUrl = image,
+                    AltText = alttext
+                }
+            }
+        };
+        
+        return blocks;
+    }
+    
+    private List<Block> CreateNewlyAddedBlocks(string title, string description, string? rating, string? image, string? alttext)
     {
         
         var blocks = new List<Block>()

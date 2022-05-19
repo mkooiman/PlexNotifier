@@ -9,6 +9,8 @@ public interface ISlackService
      * @param mediaItem the media item to be sent
      */
     Task SendMediaItem(MediaItem item, string? webhookUrl = null, string responseType = "in_channel");
+
+    Task SendSearchResult(MediaItem item, string? webhookUrl = null, string responseType = "in_channel");
     
     Task SendSimpleMessage(string message, string? webhookUrl = null, string responseType = "in_channel");
 }

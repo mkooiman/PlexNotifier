@@ -58,7 +58,7 @@ internal sealed class SearchContentUseCase : ISearchContentUseCase
         foreach (var mediaItem in result)
         {
             await _slackService
-                .SendMediaItem(mediaItem, callbackUrl, "ephemeral")
+                .SendSearchResult(mediaItem, callbackUrl, "ephemeral")
                 .ConfigureAwait(false);
         }
     }

@@ -11,14 +11,12 @@ namespace Plex;
 internal sealed class PlexService: IPlexService
 {
     private readonly PlexAccount _account;
-    private readonly string _baseUrl;
     private readonly string _token;
     private readonly bool _ownedOnly = false;
 
     public PlexService(PlexAccount account, IConfiguration configuration)
     {
         _account = account ?? throw new ArgumentNullException(nameof(account));
-        _baseUrl = configuration["Plex:Url"];
         _token = configuration["Plex:Token"];
         
         if (bool.TryParse(configuration["Plex:OwnedOnly"], out bool ownedOnly))
@@ -43,7 +41,7 @@ internal sealed class PlexService: IPlexService
             var libraries = await server
                .Libraries()
                .ConfigureAwait(false);
-
+            var serverAddress = server.Scheme + "://" + server.Address + ":" + server.Port;
             foreach (var libraryBase in libraries)
             {
                 
@@ -54,7 +52,7 @@ internal sealed class PlexService: IPlexService
                         .ConfigureAwait(false);
                     
                     items.AddRange(added.Media
-                        .Select(a => a.Map( ItemType.Movie, server.FriendlyName , _baseUrl, _token ))
+                        .Select(a => a.Map( ItemType.Movie, server.FriendlyName , serverAddress, _token ))
                         .ToList());
                 }
                 else if (libraryBase is ShowLibrary sl)
@@ -62,7 +60,7 @@ internal sealed class PlexService: IPlexService
                     var added = await sl.RecentlyAddedEpisodes();
                     
                     items.AddRange(added.Media
-                        .Select(a => a.Map(ItemType.Episode, server.FriendlyName, _baseUrl , _token ))
+                        .Select(a => a.Map(ItemType.Episode, server.FriendlyName, serverAddress , _token ))
                         .ToList());
 
                 }
@@ -104,11 +102,11 @@ internal sealed class PlexService: IPlexService
         {
             return new List<MediaItem>();
         }
-        
+        var serverAddress = server.Scheme + "://" + server.Address + ":" + server.Port;
         return hubs
             .SelectMany(h => h.Metadata
                 .Select(m => m.Map(m.GrandparentArt == null ? ItemType.Movie : ItemType.Episode,
-                server.FriendlyName, _baseUrl, _token)))
+                server.FriendlyName, serverAddress, _token)))
             .ToList();
 
 
