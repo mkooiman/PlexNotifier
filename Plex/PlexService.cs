@@ -60,7 +60,7 @@ internal sealed class PlexService: IPlexService
                     var added = await sl.RecentlyAddedEpisodes();
                     
                     items.AddRange(added.Media
-                        .Select(a => a.Map(ItemType.Episode, server.FriendlyName, serverAddress , _token ))
+                        .Select(a => a.Map(ItemType.Episode, server.FriendlyName, serverAddress , server.AccessToken ))
                         .ToList());
 
                 }
@@ -106,7 +106,7 @@ internal sealed class PlexService: IPlexService
         return hubs
             .SelectMany(h => h.Metadata
                 .Select(m => m.Map(m.GrandparentArt == null ? ItemType.Movie : ItemType.Episode,
-                server.FriendlyName, serverAddress, _token)))
+                server.FriendlyName, serverAddress, server.AccessToken)))
             .ToList();
 
 
