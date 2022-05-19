@@ -42,13 +42,13 @@ internal sealed class NotifyOfNewlyAddedMediaUseCase : INotifyOfNewlyAddedMediaU
             .GetLastScan()
             .ConfigureAwait(false);
         
-        _logger.LogInformation($"Last scan was at: {lastScan?.Time}");
+        _logger.LogInformation($"Last added item was at: {lastScan?.Time}");
         
         
         var newItems = lastAdded
             .Where(i => i.AddedAt > lastScan.Time)
             .ToList();
-
+        
         foreach (var mi in newItems)
         {
             await _slackService
