@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Core.Domain;
 using Core.Services;
 using Microsoft.Extensions.Configuration;
@@ -5,6 +6,8 @@ using Microsoft.Extensions.Logging;
 using Slack.Webhooks;
 using Slack.Webhooks.Blocks;
 using Slack.Webhooks.Elements;
+using Stubble.Core;
+using File = System.IO.File;
 
 namespace Slack;
 
@@ -15,6 +18,11 @@ internal sealed class SlackService: ISlackService
     private readonly string _webhookUrl;
     private readonly ILogger<SlackService> _logger;
 
+    private readonly string _searchTemplate = "SearchResult.json.mustache";
+    private readonly string _episodeTemplate = "Episode.json.mustache";
+    private readonly string _episodeListTemplate = "EpisodeList.json.mustache";
+    private readonly string _movieTemplate = "Movie.json.mustache";
+    private readonly string _messageTemplate = "Message.json.mustache";
     public SlackService(ILogger<SlackService> logger, IConfiguration configuration)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -23,7 +31,53 @@ internal sealed class SlackService: ISlackService
         _channel = configuration["Slack:Channel"];
     }
 
-    public async Task SendSearchResult(MediaItem item, string? webhookUrl = null, string responseType = "in_channel")
+    public async Task SendSearchResult(List<MediaItem> item, string searchTerm, string? webhookUrl = null,
+        string responseType = "in_channel")
+    {
+        webhookUrl ??= _webhookUrl;
+        var slackClient = new SlackClient(webhookUrl);
+
+        var message = await ReadMessageTemplate(_searchTemplate, new
+        {
+            Channel = _channel,
+            ResponseType = responseType,
+            NrResults = item.Count,
+            Query = searchTerm,
+            Results = item
+                .Select(i =>
+                    new
+                     {
+                         i.Title,
+                         i.Description,
+                         Image = i.ImageUrl,
+                         
+                     }   
+                    )
+                .ToList()
+            
+        });
+        //
+        // string title;
+        // if (item.ItemType == ItemType.Movie)
+        // {
+        //     string tagLine = item.TagLine == null ? "" :("_"+ item.TagLine+"_");
+        //     title = $"*{item.Title}*,\n{tagLine}\nOn plex share *_{item.Server}_*";
+        //     
+        // }
+        // else
+        // {
+        //     title = $"*{item.Show} {item.Season:D2}E{item.Episode:D2}*\nOn plex share *_{item.Server}_*";
+        // }
+
+        // slackMessage.Blocks = CreateSearchBlocks(title, item.ImageUrl, item.Title);
+        
+        var result = await slackClient
+            .PostAsync(message)
+            .ConfigureAwait(false);
+
+    }
+
+    public Task SendGroupedMediaItems(List<MediaItem> lst, string? webhookUrl = null, string responseType = "in_channel")
     {
         webhookUrl ??= _webhookUrl;
         var slackClient = new SlackClient(webhookUrl);
@@ -31,31 +85,29 @@ internal sealed class SlackService: ISlackService
         var slackMessage = new SlackMessage
         {
             Channel = _channel,
-            IconEmoji = item.ItemType == ItemType.Movie ? Emoji.MovieCamera: Emoji.Tv,
+            IconEmoji = Emoji.MovieCamera,
             Username = "PlexNotifier",
-            ResponseType = responseType
+            ResponseType = responseType,
+            
+            
         };
 
-        string title;
-        if (item.ItemType == ItemType.Movie)
-        {
-            string tagLine = item.TagLine == null ? "" :("_"+ item.TagLine+"_");
-            title = $"*{item.Title}*,\n{tagLine}\nOn plex share *_{item.Server}_*";
-            
-        }
-        else
-        {
-            title = $"*{item.Show} {item.Season:D2}E{item.Episode:D2}*\nOn plex share *_{item.Server}_*";
-        }
+        string title = $"*{lst.Count}* new media items";
 
-        slackMessage.Blocks = CreateSearchBlocks(title, item.ImageUrl, item.Title);
-        
-        var result = await slackClient
+        slackMessage.Blocks = CreateGroupedBlocks(title, lst);
+
+        var result = slackClient
             .PostAsync(slackMessage)
             .ConfigureAwait(false);
 
+        return result;
     }
 
+    public async Task SendEpisode(MediaItem item, string? webhookUrl = null, string responseType = "in_channel")
+    {
+        
+    }
+    
     public async Task SendMediaItem(MediaItem item, string? webhookUrl = null, string responseType = "in_channel")
     {
         webhookUrl ??= _webhookUrl;
@@ -106,14 +158,12 @@ internal sealed class SlackService: ISlackService
         webhookUrl ??= _webhookUrl;
         var slackClient = new SlackClient(webhookUrl);
         _logger.LogInformation("Sending message to slack on channel {channel}, to url {webhookUrl}", _channel, webhookUrl);
-        var slackMessage = new SlackMessage
-        {
-            Text = message,
-            ResponseType = responseType
-        };
+
+        var json = await ReadMessageTemplate("Message.json.mustache", new { Text = message, ResponseType = responseType })
+            .ConfigureAwait(false);
 
         await slackClient
-            .PostAsync(slackMessage)
+            .PostAsync(json)
             .ConfigureAwait(false);
         
     }
@@ -186,5 +236,17 @@ internal sealed class SlackService: ISlackService
         }
 
         return blocks;
+    }
+
+    private async Task<SlackMessage?> ReadMessageTemplate(string fileName, object data)
+    {
+        
+        var template = await File.ReadAllTextAsync(fileName);
+
+        var result = await StaticStubbleRenderer.Instance
+            .RenderAsync(template, data)
+            .ConfigureAwait(false);
+
+        return JsonSerializer.Deserialize<SlackMessage>(result);
     }
 }

@@ -1,0 +1,27 @@
+{
+  "channel" : "{{ Channel }}",
+  "icon_emoji" : "{{ IconEmoji }}",
+  "username" : "PlexNotifier",
+  "response_type" : "{{ResponseType}}",
+  "blocks": [
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*I've just found a newly added Episodes for {{ SeriesTitle }}*"
+      }
+    },
+    {
+      "type": "divider"
+    }
+{{#Episodes}}
+    ,{
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*{{EpisodeNumber}}: {{EpisodeTitle}}*"
+      }
+    }
+{{/Episodes}}
+  ]
+}

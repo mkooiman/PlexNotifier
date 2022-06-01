@@ -12,8 +12,11 @@ internal static class MetadataMapper
         var guid = metadata.Guid;
         var imageUrl = baseUrl + (metadata.Thumb ?? metadata.Art) + "?X-Plex-Token=" + token;
         var rating = metadata.AudienceRating;
+        
+        var showImageUrl = baseUrl + metadata.GrandparentThumb ?? metadata.GrandparentArt + "?X-Plex-Token=" + token;
+        
         return new MediaItem(guid, metadata.Title, metadata.Summary, metadata.Tagline, imageUrl, rating,
-            metadata.AddedAt.UnixTimestampToDate(), type, metadata.GrandparentTitle, metadata.ParentIndex, metadata.Index, serverName);
+            metadata.AddedAt.UnixTimestampToDate(), type, metadata.GrandparentTitle, showImageUrl, metadata.ParentIndex, metadata.Index, serverName);
     }
     
     

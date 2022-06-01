@@ -10,7 +10,10 @@ public interface ISlackService
      */
     Task SendMediaItem(MediaItem item, string? webhookUrl = null, string responseType = "in_channel");
 
-    Task SendSearchResult(MediaItem item, string? webhookUrl = null, string responseType = "in_channel");
+    Task SendSearchResult(List<MediaItem> item, string searchTerm, string? webhookUrl = null,
+        string responseType = "in_channel");
+    
+    Task SendGroupedMediaItems(List<MediaItem> lst, string? webhookUrl = null, string responseType = "in_channel");
     
     Task SendSimpleMessage(string message, string? webhookUrl = null, string responseType = "in_channel");
 }

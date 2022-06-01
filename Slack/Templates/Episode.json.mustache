@@ -1,0 +1,26 @@
+{
+    "channel" : "{{ Channel }}",
+    "icon_emoji" : "{{ IconEmoji }}",
+    "username" : "PlexNotifier",
+    "response_type" : "{{ResponseType}}",
+    "blocks": [
+    {
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": "*I've just found a newly added Movie: {{Title}} on plex share _{{Server}}_*"
+        }
+    },
+    {
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": "*I've just found a newly added Movie: {{Title}} on plex share _{{Server}}_*"
+        },
+        "accessory": {
+            "type": "image",
+            "image_url": "{{Image}}",
+            "alt_text": "{{Title}}"
+        }
+    }]
+}

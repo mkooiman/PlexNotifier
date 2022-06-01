@@ -49,8 +49,15 @@ public class ContentScanner : BackgroundService
 
     private async Task DoWork(CancellationToken cancellationToken)
     {
-        await using var scope = _serviceProvider.CreateAsyncScope();
-        var useCase = scope.ServiceProvider.GetRequiredService<INotifyOfNewlyAddedMediaUseCase>();
-        await useCase.Handle();
+        try
+        {
+            await using var scope = _serviceProvider.CreateAsyncScope();
+            var useCase = scope.ServiceProvider.GetRequiredService<INotifyOfNewlyAddedMediaUseCase>();
+            await useCase.Handle();
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
     }
 }
