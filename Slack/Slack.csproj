@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="JorgeSerrano.Json.JsonSnakeCaseNamingPolicy" Version="0.9.0" />
       <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="6.0.0" />
       <PackageReference Include="Slack.Webhooks" Version="1.1.5" />
       <PackageReference Include="Stubble.Core" Version="1.9.3" />
@@ -14,11 +15,11 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Core\Core.csproj" />
+        <ProjectReference Include="..\Shared\Shared.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="Templates\Movie.mustache.json" />
-      <None Include="Templates\Movie.json.mustache">
+      <None Include="Templates\*.mustache">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
     </ItemGroup>

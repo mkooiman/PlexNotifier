@@ -22,7 +22,14 @@ public class ContentScanner : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
- 
+        try
+        {
+            await DoWork(stoppingToken).ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+        }
+
         await ScheduleJob(stoppingToken);
     }
 

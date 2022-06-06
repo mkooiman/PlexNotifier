@@ -2,7 +2,7 @@ using System.Globalization;
 using Core.Domain;
 using Core.Repositories;
 using Microsoft.Extensions.Configuration;
-using Repository.Util;
+using PlexNotifier.Shared.Util;
 
 namespace Repository;
 

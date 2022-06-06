@@ -66,7 +66,9 @@ internal sealed class NotifyOfNewlyAddedMediaUseCase : INotifyOfNewlyAddedMediaU
             var lst = group.ToList();
 
             if (_collapse == CollapseSeriesSetting.Always ||
-                (_collapse == CollapseSeriesSetting.OnMultiple && lst.Count > 1))
+                (_collapse == CollapseSeriesSetting.OnMultiple &&
+                 lst.Count > 1 &&
+                 lst[0].ItemType == ItemType.Episode))
             {
                 await _slackService
                     .SendGroupedMediaItems(lst)

@@ -8,20 +8,13 @@
       "type": "section",
       "text": {
         "type": "mrkdwn",
-        "text": "*I've just found a newly added Episodes for {{ SeriesTitle }}*"
-      }
-    },
-    {
-      "type": "divider"
-    }
-{{#Episodes}}
-    ,{
-      "type": "section",
-      "text": {
-        "type": "mrkdwn",
-        "text": "*{{EpisodeNumber}}: {{EpisodeTitle}}*"
+        "text": "I've just found *{{NrResults}}* newly added Episodes for *{{ SeriesTitle }}*:\n\n{{#Episodes}}{{EpisodeNumber}}: *{{EpisodeTitle}}*\n{{/Episodes}}"
+      },
+      "accessory": {
+          "type": "image",
+          "image_url": "{{SeriesThumb}}",
+          "alt_text": "{{SeriesTitle}}"
       }
     }
-{{/Episodes}}
   ]
 }

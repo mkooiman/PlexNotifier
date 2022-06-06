@@ -1,13 +1,20 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Core.Domain;
 using Core.Services;
+using JorgeSerrano.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using PlexNotifier.Shared.Util;
+using Slack.Domain;
 using Slack.Webhooks;
 using Slack.Webhooks.Blocks;
 using Slack.Webhooks.Elements;
 using Stubble.Core;
-using File = System.IO.File;
+using File = Slack.Webhooks.Blocks.File;
+using Image = Slack.Webhooks.Blocks.Image;
+using JsonException = System.Text.Json.JsonException;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Slack;
 
@@ -18,11 +25,11 @@ internal sealed class SlackService: ISlackService
     private readonly string _webhookUrl;
     private readonly ILogger<SlackService> _logger;
 
-    private readonly string _searchTemplate = "SearchResult.json.mustache";
-    private readonly string _episodeTemplate = "Episode.json.mustache";
-    private readonly string _episodeListTemplate = "EpisodeList.json.mustache";
-    private readonly string _movieTemplate = "Movie.json.mustache";
-    private readonly string _messageTemplate = "Message.json.mustache";
+    private readonly string _searchTemplate = AppDomain.CurrentDomain.BaseDirectory + "/Templates/SearchResult.json.mustache";
+    private readonly string _episodeTemplate =  AppDomain.CurrentDomain.BaseDirectory + "/Templates/Episode.json.mustache";
+    private readonly string _episodeListTemplate =  AppDomain.CurrentDomain.BaseDirectory + "/Templates/EpisodeList.json.mustache";
+    private readonly string _movieTemplate =  AppDomain.CurrentDomain.BaseDirectory + "/Templates/Movie.json.mustache";
+    private readonly string _messageTemplate =  AppDomain.CurrentDomain.BaseDirectory + "/Templates/Message.json.mustache";
     public SlackService(ILogger<SlackService> logger, IConfiguration configuration)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -56,101 +63,113 @@ internal sealed class SlackService: ISlackService
                 .ToList()
             
         });
-        //
-        // string title;
-        // if (item.ItemType == ItemType.Movie)
-        // {
-        //     string tagLine = item.TagLine == null ? "" :("_"+ item.TagLine+"_");
-        //     title = $"*{item.Title}*,\n{tagLine}\nOn plex share *_{item.Server}_*";
-        //     
-        // }
-        // else
-        // {
-        //     title = $"*{item.Show} {item.Season:D2}E{item.Episode:D2}*\nOn plex share *_{item.Server}_*";
-        // }
-
-        // slackMessage.Blocks = CreateSearchBlocks(title, item.ImageUrl, item.Title);
-        
         var result = await slackClient
             .PostAsync(message)
             .ConfigureAwait(false);
 
     }
 
-    public Task SendGroupedMediaItems(List<MediaItem> lst, string? webhookUrl = null, string responseType = "in_channel")
+    public async Task SendGroupedMediaItems(List<MediaItem> lst, string? webhookUrl = null, string responseType = "in_channel")
     {
         webhookUrl ??= _webhookUrl;
         var slackClient = new SlackClient(webhookUrl);
 
-        var slackMessage = new SlackMessage
+        var message = await ReadMessageTemplate(_episodeListTemplate, new
         {
             Channel = _channel,
-            IconEmoji = Emoji.MovieCamera,
-            Username = "PlexNotifier",
             ResponseType = responseType,
+            IconEmoji = Emoji.Tv,
+            SeriesTitle = lst[0].Show,
+            SeriesThumb = lst[0].ShowImage,
+            NrResults = lst.Count,
+            Episodes = lst
+                .Select(i =>
+                    new
+                    {
+                        EpisodeTitle = i.Title,
+                        EpisodeNumber = $"S{i.Season:D2}E{i.Episode:D2}",
+                        i.Description,
+                        Image = i.ImageUrl,
+                         
+                    }   
+                )
+                .OrderBy( i => i.EpisodeNumber)
+                .ToList()
             
-            
-        };
-
-        string title = $"*{lst.Count}* new media items";
-
-        slackMessage.Blocks = CreateGroupedBlocks(title, lst);
-
-        var result = slackClient
-            .PostAsync(slackMessage)
+        });
+        var result = await slackClient
+            .PostAsync(message)
             .ConfigureAwait(false);
-
-        return result;
     }
 
-    public async Task SendEpisode(MediaItem item, string? webhookUrl = null, string responseType = "in_channel")
-    {
-        
-    }
-    
     public async Task SendMediaItem(MediaItem item, string? webhookUrl = null, string responseType = "in_channel")
     {
+        
         webhookUrl ??= _webhookUrl;
         var slackClient = new SlackClient(webhookUrl);
-
-        var stars = (int) Math.Round(item.Rating / 2, MidpointRounding.ToEven);
-        string? rating = null;
-        
-        var slackMessage = new SlackMessage
-        {
-            Channel = _channel,
-            IconEmoji = item.ItemType == ItemType.Movie ? Emoji.MovieCamera: Emoji.Tv,
-            Username = "PlexNotifier",
-            ResponseType = responseType
-        };
-
-        string title;
-        string description;
+        SlackMessage? message; 
         if (item.ItemType == ItemType.Movie)
         {
-            title = $"*I've just found a newly added Movie: {item.Title} on plex share _{item.Server}_*";
-            string tagLine = item.TagLine == null ? "" :("_"+ item.TagLine+"_");
-            description = $"*{item.Title}*\n{tagLine}\n{item.Description}";
-            rating = ":star:";
-            while (--stars > 0)
-            {
-                rating+= ":star:";
-            }
+            message = await CreateMovieMessage(item, webhookUrl, responseType)
+                .ConfigureAwait(false);
         }
         else
         {
-            title = $"*I've just found a newly added episode S{item.Season:D2}E{item.Episode:D2} of {item.Show} on plex share _{item.Server}_*";
-            string tagLine = item.TagLine == null ? $"S{item.Season:D2}E{item.Episode:D2}" :$"_{item.TagLine}_";
-            description = $"*{item.Show}: {item.Title}*\n{tagLine}\n{item.Description}";
+            message = await CreateEpisodeMessage(item, webhookUrl, responseType)
+                .ConfigureAwait(false);
         }
+        if(message != null)
+            await slackClient
+                .PostAsync(message)
+                .ConfigureAwait(false);
+    }
 
-        slackMessage.Blocks = CreateNewlyAddedBlocks(title, description, rating, item.ImageUrl, item.Title);
+    private async Task<SlackMessage?> CreateEpisodeMessage(MediaItem item, string? webhookUrl, string responseType)
+    {
+        return await ReadMessageTemplate(_episodeTemplate, new
+        {
+            Channel = _channel,
+            ResponseType = responseType,
+            IconEmoji = Emoji.Tv,
+            SeriesTitle = item.Show,
+            SeriesThumb = item.ShowImage,
+            item.Server,
+            Episode = new
+            {
+                EpisodeTitle = item.Title,
+                EpisodeNumber = $"S{item.Season:D2}E{item.Episode:D2}",
+                item.Description,
+                Image = item.ImageUrl
+            }
+        });
+       
+    }
+
+    private async Task<SlackMessage?> CreateMovieMessage(MediaItem item, string? webhookUrl, string responseType)
+    {
         
-      
-        var result = await slackClient
-            .PostAsync(slackMessage)
-            .ConfigureAwait(false);
+        var stars = (int) Math.Round(item.Rating / 2, MidpointRounding.ToEven);
+
+        var rating = ":star:";
         
+        while (--stars > 0)
+        {
+            rating+= ":star:";
+        }
+        return await ReadMessageTemplate(_movieTemplate, new
+        {
+            Channel = _channel,
+            IconEmoji = Emoji.MovieCamera,
+            ResponseType = responseType,
+            item.Server,
+            Item = new {
+                item.Title,
+                item.TagLine,
+                Image = item.ImageUrl,
+                item.Description,
+                Rating = rating
+            }
+        });
     }
 
     public async Task SendSimpleMessage(string message, string? webhookUrl = null, string responseType = "in_channel") 
@@ -159,7 +178,7 @@ internal sealed class SlackService: ISlackService
         var slackClient = new SlackClient(webhookUrl);
         _logger.LogInformation("Sending message to slack on channel {channel}, to url {webhookUrl}", _channel, webhookUrl);
 
-        var json = await ReadMessageTemplate("Message.json.mustache", new { Text = message, ResponseType = responseType })
+        var json = await ReadMessageTemplate(_messageTemplate, new { Text = message, ResponseType = responseType })
             .ConfigureAwait(false);
 
         await slackClient
@@ -168,85 +187,47 @@ internal sealed class SlackService: ISlackService
         
     }
 
-    private List<Block> CreateSearchBlocks(string title, string? image, string? alttext)
-    {
-        
-        var blocks = new List<Block>()
-        {
-            new Section()
-            {
-                Text = new TextObject()
-                {
-                    Type = TextObject.TextType.Markdown,
-                    Text = title
-                },
-
-                Accessory = new Webhooks.Elements.Image()
-                {
-                    ImageUrl = image,
-                    AltText = alttext
-                }
-            }
-        };
-        
-        return blocks;
-    }
-    
-    private List<Block> CreateNewlyAddedBlocks(string title, string description, string? rating, string? image, string? alttext)
-    {
-        
-        var blocks = new List<Block>()
-        {
-            new Section()
-            {
-                Text = new TextObject()
-                {
-                    Type = TextObject.TextType.Markdown,
-                    Text = title
-                }
-            },
-            new Section()
-            {
-                Text = new TextObject()
-                {
-                    Type = TextObject.TextType.Markdown,
-                    Text = description
-                },
-                Accessory = new Webhooks.Elements.Image()
-                {
-                    ImageUrl = image,
-                    AltText = alttext
-                }
-            }
-            
-        };
-        if(rating != null)
-        {
-            blocks.Add(new Section()
-            {
-                Fields = new List<TextObject>()
-                {
-                    new()
-                    {
-                        Type = TextObject.TextType.Markdown,
-                        Text = $"*Rating:*\n {rating}"
-                    },
-                }
-            });
-        }
-
-        return blocks;
-    }
-
     private async Task<SlackMessage?> ReadMessageTemplate(string fileName, object data)
     {
         
-        var template = await File.ReadAllTextAsync(fileName);
+        var template = await System.IO.File.ReadAllTextAsync(fileName);
 
         var result = await StaticStubbleRenderer.Instance
             .RenderAsync(template, data)
             .ConfigureAwait(false);
 
-        return JsonSerializer.Deserialize<SlackMessage>(result);
+        var opts = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = new JsonSnakeCaseNamingPolicy(),
+            PropertyNameCaseInsensitive = true,
+        };
+            
+        opts.Converters.Add( new PolyJsonConverter<Block>("type", s =>
+            {
+                return s.ToLowerInvariant() switch
+                {
+                    "actions" => typeof(Actions),
+                    "image" => typeof(Image),
+                    "context" => typeof(Context),
+                    "divider" => typeof(Divider),
+                    "file" => typeof(File),
+                    "text" => typeof(Text),
+                    "input" => typeof(Input),
+                    "section" => typeof(Section),
+                    "header" => typeof(Header),
+                    _ => throw new JsonException("invalid type!")
+                };
+            }));
+        opts.Converters.Add(new PolyJsonConverter<Element>("type", s =>
+        {
+            return s.ToLowerInvariant() switch
+            {
+                "image" => typeof(Slack.Webhooks.Elements.Image),
+                _ => throw new JsonException("invalid type!")
+            };
+        }));
+        opts.Converters.Add(new JsonStringEnumMemberConverter());
+
+        return JsonSerializer.Deserialize<SlackMessage>(result, opts);
     }
 }

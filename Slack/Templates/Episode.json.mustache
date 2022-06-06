@@ -8,19 +8,12 @@
         "type": "section",
         "text": {
             "type": "mrkdwn",
-            "text": "*I've just found a newly added Movie: {{Title}} on plex share _{{Server}}_*"
-        }
-    },
-    {
-        "type": "section",
-        "text": {
-            "type": "mrkdwn",
-            "text": "*I've just found a newly added Movie: {{Title}} on plex share _{{Server}}_*"
+            "text": "I've just found a newly added Episode: *{{Episode.EpisodeNumber}}* of *{{SeriesTitle}}* on plex share *_{{Server}}_*\n{{Episode.EpisodeTitle}}\n{{Episode.Description}}"
         },
         "accessory": {
             "type": "image",
-            "image_url": "{{Image}}",
-            "alt_text": "{{Title}}"
+            "image_url": "{{SeriesThumb}}",
+            "alt_text": "{{SeriesTitle}}"
         }
     }]
 }

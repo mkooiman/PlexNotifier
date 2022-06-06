@@ -1,4 +1,4 @@
-namespace Repository.Util;
+namespace PlexNotifier.Shared.Util;
 
 public static class UnixTimestamp
 {

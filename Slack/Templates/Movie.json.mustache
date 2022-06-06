@@ -8,27 +8,27 @@
       "type": "section",
       "text": {
         "type": "mrkdwn",
-        "text": "*I've just found a newly added Movie: {{Title}} on plex share _{{Server}}_*"
+        "text": "*I've just found a newly added Movie: {{Item.Title}} on plex share _{{Server}}_*"
       }
     },
     {
       "type": "section",
       "text": {
         "type": "mrkdwn",
-        "text": "*{{item.Title}}*\n{{tagLine}}\n{{item.Description}}"
+        "text": "*{{Item.Title}}*\n{{Item.tagLine}}\n{{Item.Description}}"
       },
       "accessory": {
         "type": "image",
-        "image_url": "{{Image}}",
-        "alt_text": "{{Title}}"
+        "image_url": "{{Item.Image}}",
+        "alt_text": "{{Item.Title}}"
       }
     },
     {
-      "type": "context",
-      "elements": [
+      "type": "section",
+      "fields": [
         {   
             "type": "mrkdwn",
-            "text": "**Rating:*\n{{rating}}"
+            "text": "*Rating:*\n{{Item.Rating}}"
         }
       ]
     }
