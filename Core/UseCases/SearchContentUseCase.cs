@@ -40,21 +40,21 @@ internal sealed class SearchContentUseCase : ISearchContentUseCase
         var result = await _plexService
             .SearchContent(searchTerm)
             .ConfigureAwait(false);
-        //
-        // if (result.Count > 0)
-        // {
-        //     _logger.LogInformation("Found {0} results", result.Count);
-        //     await _slackService
-        //         .SendSimpleMessage("I've found the following results:", callbackUrl, "ephemeral")
-        //         .ConfigureAwait(false);
-        // }
-        // else
-        // {
-        //     _logger.LogInformation("No results found");
-        //     await _slackService
-        //         .SendSimpleMessage("I couldn't find anything :(", callbackUrl, "ephemeral")
-        //         .ConfigureAwait(false);
-        // }
+        
+        if (result.Count > 0)
+        {
+            _logger.LogInformation("Found {0} results", result.Count);
+            await _slackService
+                .SendSimpleMessage("I've found the following results:", callbackUrl, "ephemeral")
+                .ConfigureAwait(false);
+        }
+        else
+        {
+            _logger.LogInformation("No results found");
+            await _slackService
+                .SendSimpleMessage("I couldn't find anything :(", callbackUrl, "ephemeral")
+                .ConfigureAwait(false);
+        }
 
         await _slackService
             .SendSearchResult(result, searchTerm, callbackUrl, "ephemeral")

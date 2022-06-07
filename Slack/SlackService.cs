@@ -56,6 +56,7 @@ internal sealed class SlackService: ISlackService
                      {
                          i.Title,
                          i.Description,
+                         i.Server,
                          Image = i.ImageUrl,
                          
                      }   

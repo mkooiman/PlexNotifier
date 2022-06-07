@@ -23,7 +23,9 @@ public static class Module
     public static void Configure(IApplicationBuilder app)
     {
 
+        app.UseAuthentication();
         app.UseRouting();
+        app.UseAuthorization();
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();

@@ -10,7 +10,7 @@ namespace Api.Authentication;
 
 internal sealed class SlackAuthenticationOptions : AuthenticationSchemeOptions
 {
-    public string SigningSecret { get; set; }
+    public string SigningSecret { get; set; } = null!;
 }
 
 internal sealed class SlackAuthenticationHandler: AuthenticationHandler<SlackAuthenticationOptions>
@@ -29,17 +29,19 @@ internal sealed class SlackAuthenticationHandler: AuthenticationHandler<SlackAut
         
     }
 
-    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
+        Logger.LogInformation("HandleAuthenticateAsync called");
         Request.EnableBuffering();
         if(!Request.Headers.ContainsKey(SignatureHeader) || !Request.Headers.ContainsKey(TimestampHeader))
         {
-            return Task.FromResult(AuthenticateResult.Fail("Missing headers"));
+            Logger.LogWarning("Missing SignatureHeader!");
+            return (AuthenticateResult.Fail("Missing headers"));
         }
 
         using var reader = new StreamReader(Request.Body, Encoding.UTF8, true, 1024, true);
         
-        var body = reader.ReadToEnd();
+        var body = await reader.ReadToEndAsync().ConfigureAwait(false);
 
         Request.Body.Position = 0;
         
@@ -69,6 +71,6 @@ internal sealed class SlackAuthenticationHandler: AuthenticationHandler<SlackAut
         
         AuthenticationTicket authenticationTicket = new AuthenticationTicket(principal, "slack");
         
-        return Task.FromResult(AuthenticateResult.Success(authenticationTicket));
+        return (AuthenticateResult.Success(authenticationTicket));
     }
 }
