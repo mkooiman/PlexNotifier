@@ -47,6 +47,7 @@ internal sealed class SlackService: ISlackService
         var message = await ReadMessageTemplate(_searchTemplate, new
         {
             Channel = _channel,
+            IconEmoji = Emoji.Question,
             ResponseType = responseType,
             NrResults = item.Count,
             Query = searchTerm,
@@ -64,10 +65,11 @@ internal sealed class SlackService: ISlackService
                 .ToList()
             
         });
+        _logger.LogInformation($"Responding {message.AsJson()} to {_webhookUrl}");
         var result = await slackClient
-            .PostAsync(message)
-            .ConfigureAwait(false);
-
+                .PostAsync(message, false)
+                .ConfigureAwait(false);
+            _logger.LogInformation("Result: {result}");
     }
 
     public async Task SendGroupedMediaItems(List<MediaItem> lst, string? webhookUrl = null, string responseType = "in_channel")
@@ -99,7 +101,7 @@ internal sealed class SlackService: ISlackService
             
         });
         var result = await slackClient
-            .PostAsync(message)
+            .PostAsync(message, false)
             .ConfigureAwait(false);
     }
 
@@ -111,21 +113,25 @@ internal sealed class SlackService: ISlackService
         SlackMessage? message; 
         if (item.ItemType == ItemType.Movie)
         {
-            message = await CreateMovieMessage(item, webhookUrl, responseType)
+            message = await CreateMovieMessage(item, responseType)
                 .ConfigureAwait(false);
         }
         else
         {
-            message = await CreateEpisodeMessage(item, webhookUrl, responseType)
+            message = await CreateEpisodeMessage(item, responseType)
                 .ConfigureAwait(false);
         }
-        if(message != null)
+
+        if (message != null)
+        {
+            
             await slackClient
-                .PostAsync(message)
+                .PostAsync(message, false)
                 .ConfigureAwait(false);
+        }
     }
 
-    private async Task<SlackMessage?> CreateEpisodeMessage(MediaItem item, string? webhookUrl, string responseType)
+    private async Task<SlackMessage?> CreateEpisodeMessage(MediaItem item, string responseType)
     {
         return await ReadMessageTemplate(_episodeTemplate, new
         {
@@ -146,7 +152,7 @@ internal sealed class SlackService: ISlackService
        
     }
 
-    private async Task<SlackMessage?> CreateMovieMessage(MediaItem item, string? webhookUrl, string responseType)
+    private async Task<SlackMessage?> CreateMovieMessage(MediaItem item, string responseType)
     {
         
         var stars = (int) Math.Round(item.Rating / 2, MidpointRounding.ToEven);
@@ -183,7 +189,7 @@ internal sealed class SlackService: ISlackService
             .ConfigureAwait(false);
 
         await slackClient
-            .PostAsync(json)
+            .PostAsync(json, false)
             .ConfigureAwait(false);
         
     }

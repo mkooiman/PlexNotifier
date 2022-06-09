@@ -13,7 +13,11 @@ public static class Module
     {
         services.AddAuthentication("slack")
             .AddScheme<SlackAuthenticationOptions, SlackAuthenticationHandler>("slack",
-                op => { op.SigningSecret = configuration["Slack:SigningSecret"]; });
+                op =>
+                {
+                    op.SigningSecret = configuration["Slack:SigningSecret"]; 
+                    op.SignatureOverride = configuration["Slack:SignatureOverride"]; 
+                });
 
         var builder = services.AddMvc();
         builder.AddControllersAsServices();

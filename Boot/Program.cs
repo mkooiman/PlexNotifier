@@ -4,12 +4,14 @@ using PlexNotifier;
 
 public static class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
-        using (var host = CreateHostBuilder(args).Build())
-        {
-            host.Run();
-        }
+        using var host = CreateHostBuilder(args).Build();
+        
+        await host
+            .RunAsync()
+            .ConfigureAwait(false);
+        
                     
     }
 

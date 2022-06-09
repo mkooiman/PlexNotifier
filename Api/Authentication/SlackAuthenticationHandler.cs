@@ -11,6 +11,7 @@ namespace Api.Authentication;
 internal sealed class SlackAuthenticationOptions : AuthenticationSchemeOptions
 {
     public string SigningSecret { get; set; } = null!;
+    public string? SignatureOverride { get; set; } = null;
 }
 
 internal sealed class SlackAuthenticationHandler: AuthenticationHandler<SlackAuthenticationOptions>
@@ -23,7 +24,7 @@ internal sealed class SlackAuthenticationHandler: AuthenticationHandler<SlackAut
     public SlackAuthenticationHandler(
         IOptionsMonitor<SlackAuthenticationOptions> options, 
         ILoggerFactory logger,
-        UrlEncoder encoder, 
+        UrlEncoder encoder,
         ISystemClock clock) : base(options, logger, encoder, clock)
     {
         
@@ -38,6 +39,7 @@ internal sealed class SlackAuthenticationHandler: AuthenticationHandler<SlackAut
             Logger.LogWarning("Missing SignatureHeader!");
             return (AuthenticateResult.Fail("Missing headers"));
         }
+        var expected = Request.Headers[SignatureHeader];
 
         using var reader = new StreamReader(Request.Body, Encoding.UTF8, true, 1024, true);
         
@@ -52,18 +54,23 @@ internal sealed class SlackAuthenticationHandler: AuthenticationHandler<SlackAut
         var hash = HMACSHA256.HashData( Encoding.UTF8.GetBytes(Options.SigningSecret), Encoding.UTF8.GetBytes(signatureBase));
 
         var toCheck = VersionNumber + "=" + Convert.ToHexString(hash);
-        var expected = Request.Headers[SignatureHeader];
 
         if (toCheck.Equals(expected, StringComparison.InvariantCultureIgnoreCase) )
         {
             Logger.LogInformation("Signatures match!");
+        }
+        else if (expected == Options.SignatureOverride)
+        {
+            Logger.LogInformation("Signature override used!");
         }
         else
         {
             Logger.LogWarning(
                               $"Signatures do not match!\n" +
                               $"Expected: {expected}\n" +
-                              $"Actual: {toCheck}");        }
+                              $"Actual: {toCheck}");
+            return (AuthenticateResult.Fail("Signatures do not match"));
+        }
         
         var identity = new ClaimsIdentity("slack");
         
