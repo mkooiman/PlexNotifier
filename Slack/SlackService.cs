@@ -63,7 +63,6 @@ internal sealed class SlackService: ISlackService
                      }   
                     )
                 .ToList()
-            
         });
         _logger.LogInformation($"Responding {message.AsJson()} to {_webhookUrl}");
         var result = await slackClient
@@ -85,6 +84,7 @@ internal sealed class SlackService: ISlackService
             SeriesTitle = lst[0].Show,
             SeriesThumb = lst[0].ShowImage,
             NrResults = lst.Count,
+            lst[0].Server,
             Episodes = lst
                 .Select(i =>
                     new
