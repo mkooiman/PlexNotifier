@@ -35,6 +35,7 @@ public class ContentScanner : BackgroundService
 
     protected async Task ScheduleJob(CancellationToken cancellationToken)
     {
+        DoWork(cancellationToken);
         while(!cancellationToken.IsCancellationRequested)
         {
             var next = _expression.GetNextOccurrence(DateTimeOffset.Now, _timeZoneInfo);

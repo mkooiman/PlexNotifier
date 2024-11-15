@@ -55,7 +55,7 @@ internal sealed class NotifyOfNewlyAddedMediaUseCase : INotifyOfNewlyAddedMediaU
         
         
         var newItems = lastAdded
-            .Where(i => i.AddedAt > lastScan.Time)
+            .Where(i => i.AddedAt > lastScan.Time && i.AddedAt < DateTime.Now + TimeSpan.FromDays(1) )
             .ToList();
 
         var grouped = newItems

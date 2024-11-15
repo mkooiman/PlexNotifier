@@ -13,12 +13,12 @@ internal sealed class PlexService: IPlexService
     private readonly PlexAccount _account;
     private readonly string _token;
     private readonly bool _ownedOnly = false;
-
+    private readonly List<string> _serverBlacklist;
     public PlexService(PlexAccount account, IConfiguration configuration)
     {
         _account = account ?? throw new ArgumentNullException(nameof(account));
-        _token = configuration["Plex:Token"];
-        
+        _token = configuration["Plex:Token"] ?? throw new ArgumentException("Missing Plex Token");
+        _serverBlacklist = configuration.GetSection("Plex:ServerBlacklist").Get<List<string>>() ?? new List<string>();
         if (bool.TryParse(configuration["Plex:OwnedOnly"], out bool ownedOnly))
         {
             _ownedOnly = ownedOnly;
@@ -38,6 +38,9 @@ internal sealed class PlexService: IPlexService
         
         foreach (var server in servers)
         {
+            if(_serverBlacklist.Any( entry => entry == server.Name ))
+                continue;
+            
             var libraries = await server
                .Libraries()
                .ConfigureAwait(false);
@@ -80,7 +83,9 @@ internal sealed class PlexService: IPlexService
             .Servers()
             .ConfigureAwait(false);
         
-        
+        servers = servers.Where(x => !_serverBlacklist.Contains(x.Name)).ToList();
+
+
         var tasks = servers
             .Select( x=> Search(x, searchTerm))
             .ToList();
