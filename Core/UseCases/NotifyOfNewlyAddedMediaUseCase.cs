@@ -86,8 +86,8 @@ internal sealed class NotifyOfNewlyAddedMediaUseCase : INotifyOfNewlyAddedMediaU
             
         }
         await _scanRepository
-            .SetLastScan(new Scan(lastAdded.Max(i => i.AddedAt)))
-            .ConfigureAwait(false);
+            .SetLastScan(new Scan(lastAdded.Where(i => i.AddedAt < DateTime.Now + TimeSpan.FromDays(1)).Max(i => i.AddedAt)))
+		.ConfigureAwait(false);
     }
 
 }

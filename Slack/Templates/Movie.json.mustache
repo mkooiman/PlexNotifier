@@ -8,29 +8,8 @@
       "type": "section",
       "text": {
         "type": "mrkdwn",
-        "text": "*I've just found a newly added Movie: {{Item.Title}} on plex share _{{Server}}_*"
+        "text": "*{{Item.Title}}* was just added on _{{Server}}_"
       }
-    },
-    {
-      "type": "section",
-      "text": {
-        "type": "mrkdwn",
-        "text": "*{{Item.Title}}*\n{{Item.tagLine}}\n{{Item.Description}}"
-      },
-      "accessory": {
-        "type": "image",
-        "image_url": "{{Item.Image}}",
-        "alt_text": "{{Item.Title}}"
-      }
-    },
-    {
-      "type": "section",
-      "fields": [
-        {   
-            "type": "mrkdwn",
-            "text": "*Rating:*\n{{Item.Rating}}"
-        }
-      ]
     }
   ]
 }
