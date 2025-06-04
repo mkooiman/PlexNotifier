@@ -35,7 +35,7 @@ public class ContentScanner : BackgroundService
 
     protected async Task ScheduleJob(CancellationToken cancellationToken)
     {
-        DoWork(cancellationToken);
+        await DoWork(cancellationToken);
         while(!cancellationToken.IsCancellationRequested)
         {
             var next = _expression.GetNextOccurrence(DateTimeOffset.Now, _timeZoneInfo);
@@ -43,7 +43,7 @@ public class ContentScanner : BackgroundService
             if (next.HasValue)
             {
                 var delay = next.Value - DateTimeOffset.Now;
-                if (delay.Milliseconds > 0)
+                if (delay.TotalMilliseconds > 0)
                 {
                     await Task
                         .Delay(delay, cancellationToken)

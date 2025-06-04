@@ -66,9 +66,9 @@ internal sealed class SlackService: ISlackService
         });
         _logger.LogInformation($"Responding {message.AsJson()} to {_webhookUrl}");
         var result = await slackClient
-                .PostAsync(message, false)
-                .ConfigureAwait(false);
-            _logger.LogInformation("Result: {result}");
+            .PostAsync(message, false)
+            .ConfigureAwait(false);
+        _logger.LogInformation("Result: {result}", result);
     }
 
     public async Task SendGroupedMediaItems(List<MediaItem> lst, string? webhookUrl = null, string responseType = "in_channel")
