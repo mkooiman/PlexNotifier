@@ -38,7 +38,9 @@ internal sealed class PlexService: IPlexService
         
         foreach (var server in servers)
         {
-            if(_serverBlacklist.Any( entry => entry == server.Name ))
+            if(_serverBlacklist.Any(entry =>
+                   string.Equals(entry, server.Name, StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(entry, server.FriendlyName, StringComparison.OrdinalIgnoreCase)))
                 continue;
             
             var libraries = await server
@@ -83,7 +85,11 @@ internal sealed class PlexService: IPlexService
             .Servers()
             .ConfigureAwait(false);
         
-        servers = servers.Where(x => !_serverBlacklist.Contains(x.Name)).ToList();
+        servers = servers
+            .Where(x => !_serverBlacklist.Any(entry =>
+                string.Equals(entry, x.Name, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(entry, x.FriendlyName, StringComparison.OrdinalIgnoreCase)))
+            .ToList();
 
 
         var tasks = servers
